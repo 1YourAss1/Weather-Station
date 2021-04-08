@@ -6,8 +6,8 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 
-const char* ssid = "MikroTik-kotik_2.4GHz";
-const char* password = "byzon123";
+const char* ssid = "SSID";
+const char* password = "PASSWORD";
 const char* host = "192.168.88.222";
 const int port = 8000;
 

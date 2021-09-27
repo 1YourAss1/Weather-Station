@@ -6,10 +6,10 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 
-const char* ssid = "SSID";
-const char* password = "PASSWORD";
-const char* host = "192.168.88.222";
-const int port = 8000;
+const char* ssid = "Xiaomi_2.4G";
+const char* password = "byzon123";
+const char* host = "192.168.31.59";
+const int port = 80;
 
 const int period = 10; // Minutes
 

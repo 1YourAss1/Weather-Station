@@ -9,47 +9,35 @@
 
 ESP8266WebServer server(80);
 
+String essid, epass, ehost;
+String st;
+
 void setup() {
   Serial.begin(115200);
   EEPROM.begin(512);
   delay(10);
 
-  //===============================================================
-  // Check button state (if pressed, then ...)
-  //===============================================================
-  pinMode(reset_btn, INPUT_PULLUP);
-  if (digitalRead(reset_btn) == LOW)  {
-      
-  }
-  //===============================================================
-  // Check end
-  //===============================================================
-
-
   Serial.println("\n\nStarting Weather Station by YourAss\n");
-
   //===============================================================
   // Read EEPROM for ssid/pass and host
   //===============================================================
   // SSID
   Serial.print("Reading EEPROM");
-  String essid;
+  essid = "";
   for (int i = 0; i < 32; ++i) {
     essid += char(EEPROM.read(i));
   }
   essid = essid.c_str();
   Serial.print(".");
   // Password
-  Serial.print("Reading EEPROM password: ");
-  String epass = "";
+  epass = "";
   for (int i = 32; i < 96; ++i) {
     epass += char(EEPROM.read(i));
   }
   epass = epass.c_str();
   Serial.print(".");
   // Host
-  Serial.print("Reading EEPROM host: ");
-  String ehost = "";
+  ehost = "";
   for (int i = 96; i < 128; ++i) {
     ehost += char(EEPROM.read(i));
   }
@@ -60,17 +48,34 @@ void setup() {
   //===============================================================
 
 
-  if (essid.length() > 1 && ehost.length() > 1) {
-    WiFi.begin(essid, epass);
-    if (testWifi(essid)) {
-      sendDataToHost(ehost);
-      return;
-    }
+  //===============================================================
+  // Check button state (if pressed, then start AP mode else send
+  // data to host )
+  //===============================================================
+  pinMode(reset_btn, INPUT_PULLUP);
+  if (digitalRead(reset_btn) == LOW)  {
+    startAP();
+  } else {
+    if (essid.length() > 1 && ehost.length() > 1) {
+      WiFi.begin(essid, epass);
+      if (testWifi(essid)) {
+        int c = 0;
+        while (c < 5) {
+          if (sendDataToHost(ehost)) return;
+          delay(500);
+          c++;
+        }
+        Serial.println("Go to deep sleep. Bye bye!");
+        ESP.deepSleep(30e6);
+      }
+    } else Serial.println ("ERROR: SSID or host not defined! Restart in AP mode to define settings.\n");
   }
-  startAP();
+  //===============================================================
+  // Check end
+  //===============================================================
 }
 
-void sendDataToHost(String ehost) {
+bool sendDataToHost(String ehost) {
   int port = 80;
   Serial.println("WiFi connected");
   DHT dht(5, DHT22); // pin and type
@@ -81,15 +86,15 @@ void sendDataToHost(String ehost) {
   float humidity = dht.readHumidity();
   // Check received data
   if (isnan(temp) || isnan(humidity)) {
-    Serial.println("Sensor error!");
-    return;
+    Serial.println("ERROR: Sensor error!");
+    return false;
   }
 
   Serial.println("Connect to server: " + ehost);
   WiFiClient client;
   if (!client.connect(ehost, port)) {
-    Serial.println("Connection failed!");
-    return;
+    Serial.println("ERROR: Connection failed!");
+    return false;
   }
 
   // Create URL
@@ -101,20 +106,56 @@ void sendDataToHost(String ehost) {
   // Send URL to host
   client.print(url);
   Serial.println(url);
-  delay(10);
+  delay(100);
 
   // Server response
   while (client.available()) {
     String req = client.readStringUntil('\r');
     Serial.println(req);
   }
-  Serial.println("Go to deep sleep. Bye bye!");
-  ESP.deepSleep(30e6);
+  return true;
 }
 
 
 
 void startAP() {
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+  int n = WiFi.scanNetworks();
+  Serial.print("\nScan networks done: ");
+  if (n == 0)
+    Serial.println("no networks found");
+  else
+  {
+    Serial.println(n + " networks found");
+    for (int i = 0; i < n; ++i)
+    {
+      // Print SSID and RSSI for each network found
+      Serial.print(i + 1);
+      Serial.print(": ");
+      Serial.print(WiFi.SSID(i));
+      Serial.print(" (");
+      Serial.print(WiFi.RSSI(i));
+      Serial.print(")");
+      Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
+      delay(10);
+    }
+  }
+  Serial.println("");
+  
+    st = "<select>";
+    for (int i = 0; i < n; ++i) {
+      // Print SSID and RSSI for each network found
+//      <option value="Чебурашка">Чебурашка</option>
+      st += "<option>";
+      st += WiFi.SSID(i);
+      st += (WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : " &#128274;";
+      st += "</option>";
+    }
+    st += "</select>";
+    delay(100);
+
   WiFi.softAPConfig(IPAddress(192, 168, 26, 88), IPAddress (192, 168, 26, 1), IPAddress(255, 255, 255, 0));
   WiFi.softAP("Weather_Station");
   delay(100);
@@ -130,8 +171,17 @@ void loop() {
 }
 
 void handleRoot() {
-  String s = MAIN_page;
-  server.send(200, "text/html", s);
+  //  String content = "<!DOCTYPE HTML>\r\n<html>Hello from ESP8266 at ";
+  //  content += "<p>";
+  //  content += st;
+  //  content += "</p><form method='get' action='setting'><label>SSID: </label><input name='ssid' length=32><input name='pass' length=64><input type='submit'></form>";
+  //  content += "</html>";
+  //  server.send(200, "text/html", content);
+
+  String content = FPSTR(MAIN_page1);
+  content += st;
+  content += FPSTR(MAIN_page2);
+  server.send(200, "text/html", content);
 }
 
 void handleSaveWifi() {
@@ -160,7 +210,7 @@ void handleSaveWifi() {
     //===============================================================
     Serial.println("\nUpdate done. Need to reboot");
   }
-  server.send(200, "text/plain", "The data was saved successfully. To reset data, do a factory reset.");
+  server.send(200, "text/plain", "The data was saved successfully. Reboot station.");
   //  delay(2000);
   // ESP.restart();
 }
@@ -185,17 +235,18 @@ void eraseEEPROM() {
   }
 }
 
-  bool testWifi(String essid) {
-    int c = 0;
-    Serial.print("\nConnecting to " + essid);
-    while (c < 20) {
-      if (WiFi.status() == WL_CONNECTED) {
-        return true;
-      }
-      Serial.print(".");
-      delay(500);
-      c++;
+bool testWifi(String essid) {
+  int c = 0;
+  Serial.print("\nTesting connection to " + essid);
+  while (c < 20) {
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("Success!\n");
+      return true;
     }
-    Serial.println("\nConnect timed out, opening AP");
-    return false;
+    Serial.print(".");
+    delay(500);
+    c++;
   }
+  Serial.println("\nConnect timed out, opening AP\n");
+  return false;
+}

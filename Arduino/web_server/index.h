@@ -1,4 +1,4 @@
-const char MAIN_page[] PROGMEM = R"=====(
+const char MAIN_page1[] PROGMEM = R"=====(
 <HTML>
 	<HEAD>
 			<!-- <TITLE>Weather Station Settings</TITLE> -->
@@ -7,6 +7,11 @@ const char MAIN_page[] PROGMEM = R"=====(
 	<CENTER>
 			<B>Wifi settings</B>
             <form name="wifi_save" method="POST" action="/wifi_save">
+
+)=====";
+
+const char MAIN_page2[] PROGMEM = R"=====(
+
                 <p><b>SSID:</b><br>
                  <input name="ssid" type="text" size="40">
                 </p>

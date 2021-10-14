@@ -1,0 +1,158 @@
+<HTML>
+	<HEAD>
+			<!-- <TITLE>Weather Station Settings</TITLE> -->
+      <style>
+				body {
+					/* background: linear-gradient(45deg, #EECFBA, #C5DDE8); */
+					background: linear-gradient(to top left, powderblue, pink);
+				}
+				p {
+					margin: 0;
+					text-align:center;
+					font: 1.2em "Fira Sans", sans-serif;
+				}
+				.form {
+					/* background-color: rgba(255, 255, 255, 0.5); */
+					position: fixed; top: 50%; left: 50%;
+					-webkit-transform: translate(-50%, -50%);
+					-ms-transform: translate(-50%, -50%);
+					transform: translate(-50%, -50%);
+					border-radius:10px;
+				}
+
+				.select {
+					width: 100%;
+					margin: 10px 0 10px 0;
+					-moz-appearance: none;
+					-webkit-appearance: none;
+					appearance: none;
+					border: 1px solid black;
+					border-radius: 5px;
+					padding: 10px 35px 10px 15px;
+					outline: none;
+					cursor: pointer;
+					font: 1em "Fira Sans", sans-serif;
+				}
+
+
+					.select:focus {
+						outline: none;
+						box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+					}
+
+					.select-wrapper {
+						position: relative;
+					}
+
+					.select-wrapper::before {
+						content: "";
+						position: absolute;
+						top: 50%;
+						right: 15px;
+						transform: translateY(-50%);
+
+						display: block;
+						width: 0;
+						height: 0;
+						border-style: solid;
+						border-width: 10.4px 6px 0 6px;
+						border-color: powderblue transparent transparent transparent;
+
+						pointer-events: none;
+					}
+
+	        .input {
+						width: 100%;
+						margin: 10px 0 10px 0;
+						-moz-appearance: none;
+						-webkit-appearance: none;
+						appearance: none;
+						border: 1px solid black;
+						border-radius: 5px;
+						padding: 10px 15px 10px 15px;
+						outline: none;
+						font: 1em "Fira Sans", sans-serif;
+	        }
+
+					.input:focus {
+						outline: none;
+						box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+					}
+
+					#password_field {
+						height: 0;
+						margin: 0;
+						padding: 0;
+						opacity: 0;
+
+						transition: all .5s ease-out;
+					}
+
+					#password_field.active {
+						margin: 10px 0 10px 0;
+						padding: 10px 15px 10px 15px;
+						opacity: 1;
+						height: auto;
+
+						transition: all .5s ease-out;
+					}
+      </style>
+
+			<script>
+				document.addEventListener("DOMContentLoaded", function() {
+					let select = document.querySelector('.select');
+					let password_field = document.querySelector('#password_field');
+
+					function pswdFieldVisability() {
+						if (select.options[select.selectedIndex].classList.contains('pswd')) {
+							password_field.value = '';
+							password_field.classList.add("active");
+							password_field.removeAttribute('disabled');
+						} else {
+							password_field.value = '';
+							password_field.classList.remove("active");
+							password_field.setAttribute('disabled', 'disabled');
+						}
+					}
+
+					pswdFieldVisability();
+					select.addEventListener('change', pswdFieldVisability);
+				});
+			</script>
+
+	</HEAD>
+	<BODY>
+		<form class="form" name="wifi_save" method="POST" action="/wifi_save">
+
+		<p>Wi-Fi settings:</p>
+
+		<div class="select-wrapper">
+			<select class="select" required name="ssid">
+				<option selected class="pswd" value="SSID1">Wifi1 &#128274;</option>
+				<option  value="SSID2">Wifi2</option>
+			</select>
+		</div>
+
+		<input id="password_field" class="input" name="pass" type="password" placeholder="password">
+
+
+		<p>Time settings:</p>
+		<div class="select-wrapper">
+			<select class="select" required name="timer">
+				<option value="1">1 min</option>
+				<option value="5">5 min</option>
+				<option selected value="10">10 min</option>
+			</select>
+		</div>
+
+
+		<p>Server settings:</p>
+		<!-- ^([0-9]{1,3}\.){3}[0-9]{1,3}$ -->
+		<!-- \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} -->
+		<input class="input" name="host" type="url" id="ipv4" placeholder="xxx.xxx.xxx.xxx:port">
+
+
+		<input class="input" type="submit" value="Save and reboot">
+		</form>
+	</BODY>
+</HTML>

@@ -1,0 +1,67 @@
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+      <style>
+				body {
+					background: linear-gradient(45deg, #EECFBA, #C5DDE8);
+					/* background: linear-gradient(to top left, powderblue, pink); */
+				}
+				p {
+					margin: 0;
+					text-align:center;
+					font: 20px monospace;
+				}
+				.form {
+
+					background-color: rgba(255, 255, 255, 0.5);
+					padding: 10px 20px 10px 20px;
+					position: fixed; top: 50%; left: 50%;
+					-webkit-transform: translate(-50%, -50%);
+					-ms-transform: translate(-50%, -50%);
+					transform: translate(-50%, -50%);
+					border-radius:10px;
+					box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+          max-width: 400px;
+				}
+
+				@media (max-width:768px) {
+				  .form {
+						width: 80%
+					}
+				}
+
+
+				.button {
+						width: 100%;
+						height: 40px;
+						margin: 10px 0 10px 0;
+						background-color: #ffefe5;
+						-moz-appearance: none;
+						-webkit-appearance: none;
+						appearance: none;
+						border: 1px solid black;
+						border-radius: 10px;
+						outline: none;
+						font: 20px monospace;
+						transition: .2s;
+					}
+
+					.button:hover {
+						transition: .3s;
+						box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+					}
+
+					.button:focus {
+						outline: none;
+						box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+					}
+      </style>
+
+	</head>
+	<body>
+		<form class="form" name="reboot" method="GET" action="/reboot">
+  		<p>The data was saved successfully. Reboot the station in hardware (using the reboot button on the device) or by clicking on the button below.</p>
+  		<input class="button" type="submit" value="Reboot">
+		</form>
+	</body>
+</html>

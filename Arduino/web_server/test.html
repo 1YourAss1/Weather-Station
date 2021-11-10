@@ -1,6 +1,6 @@
 <html>
 	<head>
-			<!-- <TITLE>Weather Station Settings</TITLE> -->
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
       <style>
 				body {
 					background: linear-gradient(45deg, #EECFBA, #C5DDE8);
@@ -21,108 +21,106 @@
 					border-radius:10px;
 					box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
 				}
+				@media (max-width:768px) {
+				  .form {
+						width: 80%
+					}
+				}
 
 				.select {
 					width: 100%;
+					height: 40px;
 					margin: 10px 0 10px 0;
 					-moz-appearance: none;
 					-webkit-appearance: none;
 					appearance: none;
 					border: 1px solid black;
 					border-radius: 10px;
-					padding: 10px 35px 10px 15px;
+					padding: 0 35px 0 15px;
 					outline: none;
 					cursor: pointer;
 					font: 15px monospace;
 				}
+				.select:focus {
+					outline: none;
+					box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+				}
+				.select-wrapper {
+					position: relative;
+				}
+				.select-wrapper::before {
+					content: "";
+					position: absolute;
+					top: 50%;
+					right: 15px;
+					transform: translateY(-50%);
 
+					display: block;
+					width: 0;
+					height: 0;
+					border-style: solid;
+					border-width: 10.4px 6px 0 6px;
+					border-color: #38577a transparent transparent transparent;
 
-					.select:focus {
-						outline: none;
-						box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
-					}
+					pointer-events: none;
+				}
 
-					.select-wrapper {
-						position: relative;
-					}
+        .input {
+					width: 100%;
+					height: 40px;
+					margin: 10px 0 10px 0;
+					-moz-appearance: none;
+					-webkit-appearance: none;
+					appearance: none;
+					border: 1px solid black;
+					border-radius: 10px;
+					padding: 0 15px 0 15px;
+					outline: none;
+					font: 15px monospace;
+        }
+				.input:focus {
+					outline: none;
+					box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+				}
+				#password_input {
+					height: 0;
+					margin: 0;
+					padding: 0;
+					opacity: 0;
 
-					.select-wrapper::before {
-						content: "";
-						position: absolute;
-						top: 50%;
-						right: 15px;
-						transform: translateY(-50%);
+					transition: all .3s ease-out;
+				}
+				#password_input.active {
+					height: 40px;
+					margin: 10px 0 10px 0;
+					padding: 0 15px 0 15px;
+					opacity: 1;
 
-						display: block;
-						width: 0;
-						height: 0;
-						border-style: solid;
-						border-width: 10.4px 6px 0 6px;
-						border-color: #38577a transparent transparent transparent;
+					transition: all .3s ease-out;
+				}
 
-						pointer-events: none;
-					}
-
-	        .input {
-						width: 100%;
-						margin: 10px 0 10px 0;
-						-moz-appearance: none;
-						-webkit-appearance: none;
-						appearance: none;
-						border: 1px solid black;
-						border-radius: 10px;
-						padding: 10px 15px 10px 15px;
-						outline: none;
-						font: 15px monospace;
-	        }
-
-					.input:focus {
-						outline: none;
-						box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
-					}
-
-					#password_input {
-						height: 0;
-						margin: 0;
-						padding: 0;
-						opacity: 0;
-
-						transition: all .3s ease-out;
-					}
-
-					#password_input.active {
-						margin: 10px 0 10px 0;
-						padding: 10px 15px 10px 15px;
-						opacity: 1;
-						height: auto;
-
-						transition: all .3s ease-out;
-					}
-
-					.button {
-						width: 100%;
-						margin: 10px 0 10px 0;
-						padding: 10px 15px 10px 15px;
-						background-color: #ffefe5;
-						-moz-appearance: none;
-						-webkit-appearance: none;
-						appearance: none;
-						border: 1px solid black;
-						border-radius: 10px;
-						outline: none;
-						font: 20px monospace;
-						transition: .2s;
-					}
-
-					.button:hover {
-						transition: .3s;
-						box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
-					}
-
-					.button:focus {
-						outline: none;
-						box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
-					}
+				.button {
+					width: 100%;
+					height: 40px;
+					margin: 10px 0 10px 0;
+					background-color: #ffefe5;
+					-moz-appearance: none;
+					-webkit-appearance: none;
+					appearance: none;
+					border: 1px solid black;
+					border-radius: 10px;
+					outline: none;
+					font: 20px monospace;
+					transition: .2s;
+				}
+				.button:hover {
+					transition: .3s;
+					box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+				}
+				.button:focus {
+					outline: none;
+					box-shadow: 0px 0px 0px 1px #38577a, 0px 0px 10px #7e9bbd;
+				}
       </style>
 
 			<script>
@@ -135,10 +133,12 @@
 						if (select.options[select.selectedIndex].classList.contains('pswd')) {
 							password_input.value = '';
 							password_input.classList.add("active");
+							password_input.required = true;
 							password_input.removeAttribute('disabled');
 						} else {
 							password_input.value = '';
 							password_input.classList.remove("active");
+							password_input.required = false;
 							password_input.setAttribute('disabled', 'disabled');
 						}
 					}
@@ -174,16 +174,15 @@
 					// Move caret on click
 					address_input.addEventListener('click', function() { moveCaret(this, this.selectionStart); });
 					// Focus and blur
-					address_input.addEventListener('blur', function() { if (this.value == '_._._._:_') this.value = ''; });
+					address_input.addEventListener('blur', function() { if (this.value == "_._._._:_") this.value = ""; });
 					address_input.addEventListener('focus', function() {
-						if (this.value == '') {
-							this.value = '_._._._:_';
+						if (this.value == "") {
+							this.value = "_._._._:_";
 							moveCaret(this, this.selectionStart);
 						}
 					});
 					// Cancel paste
 					address_input.addEventListener('paste', function() { event.preventDefault(); });
-
 					// Input data
 					address_input.addEventListener('input', function() {
 						let inputAddress = this.value.replace(/[^\.:\d]/g, ""),
@@ -240,21 +239,19 @@
 						this.value = formattedInputValue;
 						moveCaret(this, selectionStart);
 					});
-
-
 					// Handling Backspace and Delete
 					address_input.addEventListener('keydown', function(e) {
 						let val = this.value;
 						let s = this.selectionStart;
-						// Cancel characters (one more check)
-						if (e.code.match(/Key[A-Za-z]/g)) event.preventDefault();
+						let key = e.which || e.keyCode || e.charCode;
+
 						// Handling Backspace
-						if (e.code.match('Backspace') && /[\.:]/g.test(val[s-1])) {
+						if (key === 8 && /[\.:]/g.test(val[s-1])) {
 							event.preventDefault();
 							this.setSelectionRange(s-1, s-1);
 						}
 						// Handling Delete
-						if (e.code.match('Delete')) {
+						if (key === 46) {
 							if (/[\.:]/g.test(val[s])) {
 								event.preventDefault();
 								this.setSelectionRange(s+1, s+1);
@@ -271,9 +268,14 @@
 							}
 						}
 						// Handling Space
-						if (e.code.match('Space')) {
+						if (key === 32) {
 							event.preventDefault();
 							if (/[\.:]/g.test(val[s])) this.setSelectionRange(s+1, s+1);
+						}
+
+						// Handling Android keyboard
+						if (key === 229) {
+							if (/[\.:]/g.test(val[s])) setTimeout(() => this.setSelectionRange(s+1, s+1), 0);
 						}
 					});
 
@@ -282,7 +284,7 @@
 
 	</head>
 	<body>
-		<form class="form" name="wifi_save" method="POST" action="/wifi_save">
+		<form class="form" name="wifi_save" method="POST" action="wifi_save.html">
 
 		<p>Wi-Fi</p>
 
@@ -309,9 +311,9 @@
 
 		<p>Server</p>
 
-		<input id="address_input" class="input" name="address" type="text" required='on'
+		<input id="address_input" class="input" name="address" type="tel" required='on'
 						pattern="((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):(\d{1,5})"
-						inputmode="numeric" placeholder="address" autocomplete="off">
+						 placeholder="address" autocomplete="off">
 
 
 		<input class="button" type="submit" value="Save">

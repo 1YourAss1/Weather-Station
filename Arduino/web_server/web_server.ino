@@ -8,8 +8,9 @@
 #define reset_btn 4
 
 ESP8266WebServer server(80);
+int timer = 10; // 10 minutes sleep by default
 
-String essid, epass, ehost;
+String essid, epass, etimer, ehost;
 String st;
 
 void setup() {
@@ -36,9 +37,17 @@ void setup() {
   }
   epass = epass.c_str();
   Serial.print(".");
+  // Timer
+  etimer = "";
+  for (int i = 96; i < 112; ++i) {
+    etimer += char(EEPROM.read(i));
+  }
+  etimer = etimer.c_str();
+  timer = etimer.toInt();
+  Serial.print(".");
   // Host
   ehost = "";
-  for (int i = 96; i < 128; ++i) {
+  for (int i = 112; i < 144; ++i) {
     ehost += char(EEPROM.read(i));
   }
   ehost = ehost.c_str();
@@ -76,7 +85,8 @@ void setup() {
 }
 
 bool sendDataToHost(String ehost) {
-  int port = 80;
+  String host = ehost.substring(0, ehost.indexOf(":"));
+  int port = ehost.substring(ehost.indexOf(":") + 1, ehost.length()).toInt();
   Serial.println("WiFi connected");
   DHT dht(5, DHT22); // pin and type
   dht.begin();
@@ -92,7 +102,7 @@ bool sendDataToHost(String ehost) {
 
   Serial.println("Connect to server: " + ehost);
   WiFiClient client;
-  if (!client.connect(ehost, port)) {
+  if (!client.connect(host, port)) {
     Serial.println("ERROR: Connection failed!");
     return false;
   }
@@ -102,7 +112,7 @@ bool sendDataToHost(String ehost) {
   url += temp;
   url += "&humidity=";
   url += humidity;
-  url = String("PUT ") + url + " HTTP/1.1\r\n" + "Host: " + ehost + ":" + port + "\r\n" + "Connection: close\r\n\r\n";
+  url = String("PUT ") + url + " HTTP/1.1\r\n" + "Host: " + host + ":" + port + "\r\n" + "Connection: close\r\n\r\n";
   // Send URL to host
   client.print(url);
   Serial.println(url);
@@ -143,24 +153,27 @@ void startAP() {
     }
   }
   Serial.println("");
-  
-    st = "<select>";
-    for (int i = 0; i < n; ++i) {
-      // Print SSID and RSSI for each network found
-//      <option value="Чебурашка">Чебурашка</option>
-      st += "<option>";
-      st += WiFi.SSID(i);
-      st += (WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : " &#128274;";
-      st += "</option>";
-    }
-    st += "</select>";
-    delay(100);
+
+  st = "";
+  for (int i = 0; i < n; ++i) {
+    // Print SSID and RSSI for each network found
+    // <option selected class="pswd" value="SSID1">Wifi1 &#128274;</option>
+    st += "<option";
+    st += (WiFi.SSID(i) == essid) ? " selected " : "";
+    st += (WiFi.encryptionType(i) == ENC_TYPE_NONE) ? "" : " class=\"pswd\" ";
+    st += "value=\"" + WiFi.SSID(i) + "\">";
+    st += WiFi.SSID(i);
+    st += (WiFi.encryptionType(i) == ENC_TYPE_NONE) ? "" : " &#128274;";
+    st += "</option>";
+  }
+  delay(100);
 
   WiFi.softAPConfig(IPAddress(192, 168, 26, 88), IPAddress (192, 168, 26, 1), IPAddress(255, 255, 255, 0));
   WiFi.softAP("Weather_Station");
   delay(100);
   server.on("/", HTTP_GET, handleRoot);
   server.on("/wifi_save", HTTP_POST, handleSaveWifi);
+  server.on("/reboot", HTTP_GET, handleReboot);
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("\nHTTP server started at 192.168.26.88");
@@ -171,48 +184,60 @@ void loop() {
 }
 
 void handleRoot() {
-  //  String content = "<!DOCTYPE HTML>\r\n<html>Hello from ESP8266 at ";
-  //  content += "<p>";
-  //  content += st;
-  //  content += "</p><form method='get' action='setting'><label>SSID: </label><input name='ssid' length=32><input name='pass' length=64><input type='submit'></form>";
-  //  content += "</html>";
-  //  server.send(200, "text/html", content);
-
   String content = FPSTR(MAIN_page1);
+  // Insert list of wifi devices
   content += st;
   content += FPSTR(MAIN_page2);
+  // Insert timer list
+  content += "<option " + String( (timer == 1) ? "selected " : "" ) + "value=\"1\">1 min</option>";
+  content += "<option " + String( (timer == 5) ? "selected " : "") + "value=\"5\">5 min</option>";
+  content += "<option " + String( (timer == 10) ? "selected " : "") + "value=\"10\">10 min</option>";
+  content += FPSTR(MAIN_page3);
+  // Insert host value
+  content += " value = \"" + ehost + "\" ";
+  content += FPSTR(MAIN_page4);
   server.send(200, "text/html", content);
 }
 
 void handleSaveWifi() {
-  if (!server.hasArg("ssid") || !server.hasArg("pass") || !server.hasArg("host")
-      || server.arg("ssid") == NULL || server.arg("pass") == NULL || server.arg("host") == NULL) {
+  if (!server.hasArg("ssid") || !server.hasArg("timer") || !server.hasArg("address")
+      || server.arg("ssid") == NULL || server.arg("timer") == NULL || server.arg("address") == NULL) {
     server.send(400, "text/plain", "400: Invalid Request");
   } else {
     // Clear EEPROM
     Serial.println("\nUpdating EEPROM");
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < 144; ++i) {
       EEPROM.write(i, 0);
     }
     // Get arguments from request
     String nssid = server.arg("ssid");
     String npass = server.arg("pass");
-    String nhost = server.arg("host");
+    String ntimer = server.arg("timer");
+    String nhost = server.arg("address");
     //===============================================================
     // Write ssid/pass and host to EEPROM
     //===============================================================
     for (int i = 0; i < nssid.length(); ++i) EEPROM.write(i, nssid[i]);
     for (int i = 0; i < npass.length(); ++i) EEPROM.write(32 + i, npass[i]);
-    for (int i = 0; i < nhost.length(); ++i) EEPROM.write(96 + i, nhost[i]);
+    for (int i = 0; i < nhost.length(); ++i) EEPROM.write(96 + i, ntimer[i]);
+    for (int i = 0; i < nhost.length(); ++i) EEPROM.write(112 + i, nhost[i]);
     EEPROM.commit();
     //===============================================================
     // Write EEPROM end
     //===============================================================
     Serial.println("\nUpdate done. Need to reboot");
   }
-  server.send(200, "text/plain", "The data was saved successfully. Reboot station.");
+  // Send wifi_save page
+  String content = FPSTR(SAVE_page);
+  server.send(200, "text/html", content);
+  //  server.send(200, "text/plain", "The data was saved successfully. Reboot station.");
   //  delay(2000);
   // ESP.restart();
+}
+
+void handleReboot() {
+  delay(2000);
+  ESP.restart();
 }
 
 void handleNotFound() {
